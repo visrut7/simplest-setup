@@ -1,8 +1,13 @@
 document.addEventListener("DOMContentLoaded", function () {
   const getCookieBtn = document.getElementById("getCookieBtn");
   const setCookieBtn = document.getElementById("setCookieBtn");
+  const setHttpOnlyCookieBtn = document.getElementById("setHttpOnlyCookieBtn");
   const cookieNameInput = document.getElementById("cookieName");
   const cookieValueInput = document.getElementById("cookieValue");
+  const httpOnlyCookieNameInput = document.getElementById("httpOnlyCookieName");
+  const httpOnlyCookieValueInput = document.getElementById(
+    "httpOnlyCookieValue"
+  );
   const statusDiv = document.getElementById("status");
   const cookieTableBody = document.getElementById("cookieTableBody");
 
@@ -35,19 +40,26 @@ document.addEventListener("DOMContentLoaded", function () {
       return;
     }
 
+    // Get client-side accessible cookies
+    const clientCookies = document.cookie
+      .split(";")
+      .map((c) => c.trim().split("=")[0]);
+
     cookies.forEach((cookie) => {
       const row = document.createElement("tr");
-      const typeClass = cookie.type === "HTTP-Only" ? "http-only" : "regular";
+      const isHttpOnly = !clientCookies.includes(cookie.name);
+      const type = isHttpOnly ? "HTTP-Only" : "Regular";
+      const typeClass = isHttpOnly ? "http-only" : "regular";
 
       row.innerHTML = `
         <td class="cookie-name">${cookie.name}</td>
         <td class="cookie-value">${cookie.value}</td>
-        <td><span class="cookie-type ${typeClass}">${cookie.type}</span></td>
+        <td><span class="cookie-type ${typeClass}">${type}</span></td>
         <td>
           ${
-            cookie.type === "Regular"
+            type === "Regular"
               ? `<button class="btn-danger" onclick="deleteCookie('${cookie.name}')">Delete</button>`
-              : '<span style="color: #718096;">Server Only</span>'
+              : `<button class="btn-danger" onclick="deleteHttpOnlyCookie('${cookie.name}')">Delete</button>`
           }
         </td>
       `;
@@ -70,7 +82,6 @@ document.addEventListener("DOMContentLoaded", function () {
       });
 
       const data = await response.json();
-      console.log("Server response:", data);
 
       populateCookieTable(data.parsedCookies);
       showStatus("Cookies loaded successfully!", "success");
@@ -99,6 +110,46 @@ document.addEventListener("DOMContentLoaded", function () {
     showStatus(`Cookie "${name}" set successfully!`, "success");
   });
 
+  // Set HTTP-only cookie
+  setHttpOnlyCookieBtn.addEventListener("click", async function () {
+    const name = httpOnlyCookieNameInput.value.trim();
+    const value = httpOnlyCookieValueInput.value.trim();
+
+    if (!name || !value) {
+      showStatus("Please enter both cookie name and value", "error");
+      return;
+    }
+
+    setHttpOnlyCookieBtn.disabled = true;
+    setHttpOnlyCookieBtn.textContent = "Setting...";
+
+    try {
+      const response = await fetch("/set-cookie", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ name, value }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        httpOnlyCookieNameInput.value = "";
+        httpOnlyCookieValueInput.value = "";
+        showStatus(data.message, "success");
+      } else {
+        showStatus(data.error || "Error setting HTTP-only cookie", "error");
+      }
+    } catch (error) {
+      console.error("Error:", error);
+      showStatus("Error setting HTTP-only cookie", "error");
+    } finally {
+      setHttpOnlyCookieBtn.disabled = false;
+      setHttpOnlyCookieBtn.textContent = "Set HTTP-Only Cookie";
+    }
+  });
+
   // Allow Enter key to set cookie
   cookieNameInput.addEventListener("keypress", function (e) {
     if (e.key === "Enter") {
@@ -112,6 +163,19 @@ document.addEventListener("DOMContentLoaded", function () {
     }
   });
 
+  // Allow Enter key to set HTTP-only cookie
+  httpOnlyCookieNameInput.addEventListener("keypress", function (e) {
+    if (e.key === "Enter") {
+      setHttpOnlyCookieBtn.click();
+    }
+  });
+
+  httpOnlyCookieValueInput.addEventListener("keypress", function (e) {
+    if (e.key === "Enter") {
+      setHttpOnlyCookieBtn.click();
+    }
+  });
+
   // Make deleteCookie function globally available
   window.deleteCookie = function (name) {
     deleteCookie(name);
@@ -120,5 +184,33 @@ document.addEventListener("DOMContentLoaded", function () {
     setTimeout(() => {
       getCookieBtn.click();
     }, 500);
+  };
+
+  // Make deleteHttpOnlyCookie function globally available
+  window.deleteHttpOnlyCookie = async function (name) {
+    try {
+      const response = await fetch("/delete-cookie", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ name }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        showStatus(data.message, "success");
+        // Refresh the table
+        setTimeout(() => {
+          getCookieBtn.click();
+        }, 500);
+      } else {
+        showStatus(data.error || "Error deleting cookie", "error");
+      }
+    } catch (error) {
+      console.error("Error:", error);
+      showStatus("Error deleting cookie", "error");
+    }
   };
 });

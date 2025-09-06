@@ -14,6 +14,12 @@ const routes = {
   "/get-cookie": {
     POST: handleGetCookie,
   },
+  "/set-cookie": {
+    POST: handleSetCookie,
+  },
+  "/delete-cookie": {
+    POST: handleDeleteCookie,
+  },
 };
 
 /**
@@ -38,7 +44,6 @@ function handleGetCookie(req, res) {
         cookieData.parsedCookies.push({
           name: name.trim(),
           value: value.trim(),
-          type: name === "httpOnlyCookie" ? "HTTP-Only" : "Regular",
         });
       }
     });
@@ -46,6 +51,86 @@ function handleGetCookie(req, res) {
 
   res.writeHead(200, { "Content-Type": "application/json" });
   res.end(JSON.stringify(cookieData));
+}
+
+/**
+ * @param {IncomingMessage} req
+ * @param {ServerResponse} res
+ * @returns {void}
+ */
+function handleSetCookie(req, res) {
+  let body = "";
+
+  req.on("data", (chunk) => {
+    body += chunk.toString();
+  });
+
+  req.on("end", () => {
+    try {
+      const data = JSON.parse(body);
+      const { name, value } = data;
+
+      if (!name || !value) {
+        res.writeHead(400, { "Content-Type": "application/json" });
+        res.end(JSON.stringify({ error: "Name and value are required" }));
+        return;
+      }
+
+      // Set HTTP-only cookie
+      res.setHeader("Set-Cookie", `${name}=${value}; HttpOnly; Path=/`);
+
+      res.writeHead(200, { "Content-Type": "application/json" });
+      res.end(
+        JSON.stringify({
+          message: `HTTP-only cookie "${name}" set successfully`,
+          cookie: { name, value, type: "HTTP-Only" },
+        })
+      );
+    } catch (error) {
+      res.writeHead(400, { "Content-Type": "application/json" });
+      res.end(JSON.stringify({ error: "Invalid JSON data" }));
+    }
+  });
+}
+
+/**
+ * @param {IncomingMessage} req
+ * @param {ServerResponse} res
+ * @returns {void}
+ */
+function handleDeleteCookie(req, res) {
+  let body = "";
+
+  req.on("data", (chunk) => {
+    body += chunk.toString();
+  });
+
+  req.on("end", () => {
+    try {
+      const data = JSON.parse(body);
+      const { name } = data;
+
+      if (!name) {
+        res.writeHead(400, { "Content-Type": "application/json" });
+        res.end(JSON.stringify({ error: "Cookie name is required" }));
+        return;
+      }
+
+      // Set cookie to expire immediately
+      res.setHeader(
+        "Set-Cookie",
+        `${name}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; Path=/`
+      );
+
+      res.writeHead(200, { "Content-Type": "application/json" });
+      res.end(
+        JSON.stringify({ message: `Cookie "${name}" deleted successfully` })
+      );
+    } catch (error) {
+      res.writeHead(400, { "Content-Type": "application/json" });
+      res.end(JSON.stringify({ error: "Invalid JSON data" }));
+    }
+  });
 }
 
 /**
