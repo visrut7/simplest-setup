@@ -15,12 +15,43 @@
 
     <main>
       <div class="card">
+        <h2>Set Browser Cookie</h2>
+        <p>Add a new cookie that will be accessible via JavaScript.</p>
+        <div class="form-group">
+          <input type="text" id="cookieName" placeholder="Cookie Name" class="input-field">
+          <input type="text" id="cookieValue" placeholder="Cookie Value" class="input-field">
+          <button id="setCookieBtn" class="btn-secondary">Set Cookie</button>
+        </div>
+      </div>
+
+      <div class="card">
         <h2>Cookie Actions</h2>
-        <p>Click the button below to log the HTTP-only cookie to the server console.</p>
-        <button id="logCookieBtn" class="btn-primary">
-          Log HTTP-Only Cookie
+        <p>Get all cookies from server and display them in the table below.</p>
+        <button id="getCookieBtn" class="btn-primary">
+          Get All Cookies
         </button>
         <div id="status" class="status"></div>
+      </div>
+
+      <div class="card">
+        <h2>Cookie Table</h2>
+        <div class="table-container">
+          <table id="cookieTable" class="cookie-table">
+            <thead>
+              <tr>
+                <th>Name</th>
+                <th>Value</th>
+                <th>Type</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="cookieTableBody">
+              <tr class="no-data">
+                <td colspan="4">No cookies found. Click "Get All Cookies" to load them.</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
       </div>
     </main>
   </div>
