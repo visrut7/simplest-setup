@@ -1,18 +1,30 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <title>Learning Ground</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Cookie Demo</title>
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <h1 class="title">Learning Ground</h1>
+  <div class="container">
+    <header>
+      <h1 class="title">Cookie Security Demo</h1>
+      <p class="subtitle">Understanding HTTP-Only vs Regular Cookies</p>
+    </header>
 
-    <script>
-        setInterval(() => {
-          fetch(window.location.href, { method: 'HEAD' })
-            .then(res => res.text())
-            .then(() => location.reload());
-        }, 2000);
-    </script>      
+    <main>
+      <div class="card">
+        <h2>Cookie Actions</h2>
+        <p>Click the button below to log the HTTP-only cookie to the server console.</p>
+        <button id="logCookieBtn" class="btn-primary">
+          Log HTTP-Only Cookie
+        </button>
+        <div id="status" class="status"></div>
+      </div>
+    </main>
+  </div>
+
+  <script src="client.js" defer></script>
 </body>
 </html>
