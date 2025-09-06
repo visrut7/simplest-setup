@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Learning Ground</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <h1 class="title">Learning Ground</h1>
+
+    <script>
+        setInterval(() => {
+          fetch(window.location.href, { method: 'HEAD' })
+            .then(res => res.text())
+            .then(() => location.reload());
+        }, 2000);
+    </script>      
+</body>
+</html>
